@@ -97,3 +97,65 @@ func TestPower(t *testing.T) {
 		})
 	}
 }
+
+func TestMakeCounter(t *testing.T) {
+	c1 := MakeCounter(0)
+
+	if got := c1(); got != 1 {
+		t.Fatalf("expected 1, got %d", got)
+	}
+	if got := c1(); got != 2 {
+		t.Fatalf("expected 2, got %d", got)
+	}
+
+	c2 := MakeCounter(10)
+	if got := c2(); got != 11 {
+		t.Fatalf("expected 11, got %d", got)
+	}
+
+	// Ensure counters are independent
+	if got := c1(); got != 3 {
+		t.Fatalf("expected 3, got %d", got)
+	}
+}
+
+func TestMakeMultiplier(t *testing.T) {
+	tests := []struct {
+		name   string
+		factor int
+		input  int
+		want   int
+	}{
+		{name: "double", factor: 2, input: 5, want: 10},
+		{name: "triple", factor: 3, input: 5, want: 15},
+		{name: "zero factor", factor: 0, input: 100, want: 0},
+		{name: "negative factor", factor: -2, input: 4, want: -8},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := MakeMultiplier(tt.factor)
+			if got := m(tt.input); got != tt.want {
+				t.Fatalf("got %d want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMakeAccumulator(t *testing.T) {
+	add, sub, get := MakeAccumulator(100)
+
+	if got := get(); got != 100 {
+		t.Fatalf("expected 100, got %d", got)
+	}
+
+	add(50)
+	if got := get(); got != 150 {
+		t.Fatalf("expected 150, got %d", got)
+	}
+
+	sub(30)
+	if got := get(); got != 120 {
+		t.Fatalf("expected 120, got %d", got)
+	}
+}

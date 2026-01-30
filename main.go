@@ -47,3 +47,40 @@ func Power(base, exponent int) (int, error) {
 	}
 	return result, nil
 }
+
+// Part 2: Function Factory & Closures
+
+// MakeCounter returns a function that increments and returns a counter.
+// Each returned counter is independent because it captures its own state.
+func MakeCounter(start int) func() int {
+	count := start
+	return func() int {
+		count++
+		return count
+	}
+}
+
+// MakeMultiplier returns a function that multiplies input by the captured factor.
+func MakeMultiplier(factor int) func(int) int {
+	return func(x int) int {
+		return x * factor
+	}
+}
+
+// MakeAccumulator returns three functions that share the same captured state:
+// add increases the accumulator, subtract decreases it, and get returns current value.
+func MakeAccumulator(initial int) (add func(int), subtract func(int), get func() int) {
+	value := initial
+
+	add = func(x int) {
+		value += x
+	}
+	subtract = func(x int) {
+		value -= x
+	}
+	get = func() int {
+		return value
+	}
+
+	return
+}
