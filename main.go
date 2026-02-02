@@ -208,13 +208,117 @@ func AnalyzeEscape() {
 }
 
 /*
-Escape analysis explanation (update after running `go build -gcflags '-m' main.go`):
+Escape analysis explanation (from: go build -gcflags '-m' main.go):
 
-- CreateOnHeap(): the local variable escapes to the heap because we return its address (&n).
-  That value must stay valid after the function returns, so the compiler allocates it on the heap.
+  - CreateOnHeap(): the local variable `n` escapes to the heap because we return its address (&n).
+    The output shows: "moved to heap: n". The value must stay valid after the function returns.
 
-- CreateOnStack(): returns a value, so it typically does not escape; it can stay on the stack.
+  - CreateOnStack(): returns an int value (not a pointer), so it typically does NOT need to escape.
+    Returning a value copies it out, so the local variable can stay on the stack.
 
-"Escapes to heap" means the compiler decided the variable must be heap-allocated because it
-outlives the function scope or its address is used somewhere that requires it to remain valid.
+Other escapes in this project:
+  - Closures: captured variables escape (ex: "moved to heap: count" and "moved to heap: value")
+    because the returned function needs that state after the outer function returns.
+
+"Escapes to heap" means the compiler decided a variable must be heap-allocated instead of stack-allocated,
+usually because its address is returned/stored or it outlives the function call.
 */
+func main() {
+	// Part 4: Process Information
+	ExploreProcess()
+
+	// Part 1: Math Operations
+	fmt.Println("====== Math Operations ======")
+
+	for _, n := range []int{0, 5, 10} {
+		f, err := Factorial(n)
+		if err != nil {
+			fmt.Printf("Factorial(%d) error: %v\n", n, err)
+			continue
+		}
+		fmt.Printf("Factorial(%d) == %d\n", n, f)
+	}
+
+	for _, n := range []int{17, 20, 25} {
+		isP, err := IsPrime(n)
+		if err != nil {
+			fmt.Printf("IsPrime(%d) error: %v\n", n, err)
+			continue
+		}
+		fmt.Printf("IsPrime(%d) == %v\n", n, isP)
+	}
+
+	for _, p := range [][2]int{{2, 8}, {5, 3}} {
+		result, err := Power(p[0], p[1])
+		if err != nil {
+			fmt.Printf("Power(%d,%d) error: %v\n", p[0], p[1], err)
+			continue
+		}
+		fmt.Printf("Power(%d,%d) == %d\n", p[0], p[1], result)
+	}
+
+	fmt.Println()
+
+	// Part 2: Closures
+	fmt.Println("====== Closure Demonstration ======")
+
+	counter1 := MakeCounter(0)
+	counter2 := MakeCounter(100)
+
+	fmt.Printf("Counter1: %d\n", counter1())
+	fmt.Printf("Counter1: %d\n", counter1())
+	fmt.Printf("Counter2: %d\n", counter2())
+	fmt.Printf("Counter2: %d\n", counter2())
+	fmt.Printf("Counter1: %d (independent)\n", counter1())
+
+	doubler := MakeMultiplier(2)
+	tripler := MakeMultiplier(3)
+	fmt.Printf("Doubler(5) = %d\n", doubler(5))
+	fmt.Printf("Tripler(5) = %d\n", tripler(5))
+
+	add, sub, get := MakeAccumulator(100)
+	add(50)
+	sub(30)
+	fmt.Printf("Accumulator result = %d\n", get())
+
+	fmt.Println()
+
+	// Part 3: Higher-Order Functions
+	fmt.Println("====== Higher-Order Functions ======")
+
+	nums := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	fmt.Printf("Original: %v\n", nums)
+
+	squared := Apply(nums, func(x int) int { return x * x })
+	fmt.Printf("Squared:  %v\n", squared)
+
+	evens := Filter(nums, func(x int) bool { return x%2 == 0 })
+	fmt.Printf("Evens:    %v\n", evens)
+
+	sum := Reduce(nums, 0, func(acc, cur int) int { return acc + cur })
+	fmt.Printf("Sum:      %d\n", sum)
+
+	doubleThenAddTen := Compose(
+		func(x int) int { return x + 10 }, // f
+		func(x int) int { return x * 2 },  // g
+	)
+	fmt.Printf("Double then add 10 (5) = %d\n", doubleThenAddTen(5))
+
+	fmt.Println()
+
+	// Part 5: Pointers
+	fmt.Println("====== Pointer Demonstration ======")
+
+	a, b := 5, 10
+	fmt.Printf("Before SwapValues: a=%d, b=%d\n", a, b)
+	newA, newB := SwapValues(a, b)
+	fmt.Printf("SwapValues returned: a=%d, b=%d (originals unchanged)\n", newA, newB)
+	fmt.Printf("Original still: a=%d, b=%d\n", a, b)
+
+	fmt.Printf("Before SwapPointers: a=%d, b=%d\n", a, b)
+	SwapPointers(&a, &b)
+	fmt.Printf("After SwapPointers: a=%d, b=%d (originals changed)\n", a, b)
+
+	// Keep this call in the program (escape analysis demo)
+	AnalyzeEscape()
+}
