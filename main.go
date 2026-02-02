@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"math"
+	"os"
 )
 
 // Part 1: Math Operations
@@ -122,4 +124,32 @@ func Compose(f func(int) int, g func(int) int) func(int) int {
 	return func(x int) int {
 		return f(g(x))
 	}
+}
+
+// Part 4: Process Explorer
+//
+// A process is a running program. Each process has a unique ID called a PID.
+// Process isolation is important because it prevents other processes from directly
+// reading or modifying this program's memory (security + stability).
+//
+// NOTE: A slice in Go has a small "header" (pointer/len/cap). &data is the address
+// of that header variable, while &data[0] is the address of the first element in
+// the underlying array.
+
+func ExploreProcess() {
+	fmt.Println("====== Process Information ======")
+
+	pid := os.Getpid()
+	ppid := os.Getppid()
+
+	fmt.Printf("Current Process ID: %d\n", pid)
+	fmt.Printf("Parent Process ID: %d\n", ppid)
+
+	data := []int{1, 2, 3, 4, 5}
+
+	fmt.Printf("Memory address of slice (header variable): %p\n", &data)
+	fmt.Printf("Memory address of first element: %p\n", &data[0])
+
+	fmt.Println("Note: Other processes cannot access these addresses due to process isolation.")
+	fmt.Println()
 }
