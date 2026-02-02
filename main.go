@@ -153,3 +153,68 @@ func ExploreProcess() {
 	fmt.Println("Note: Other processes cannot access these addresses due to process isolation.")
 	fmt.Println()
 }
+
+// Part 5: Pointer Playground & Escape Analysis
+
+// DoubleValue takes an int by value.
+// Will this modify the original variable? No.
+// Why? Go passes arguments by value (it makes a copy).
+func DoubleValue(x int) {
+	x = x * 2
+}
+
+// DoublePointer takes a pointer to an int.
+// Will this modify the original variable? Yes.
+// Why? We modify the value at the memory address.
+func DoublePointer(x *int) {
+	*x = *x * 2
+}
+
+// CreateOnStack returns a value (not a pointer).
+// This variable stays on the stack.
+func CreateOnStack() int {
+	n := 42
+	return n
+}
+
+// CreateOnHeap returns a pointer to a local variable.
+// This variable escapes to the heap.
+func CreateOnHeap() *int {
+	n := 99
+	return &n
+}
+
+// SwapValues swaps two ints and returns the swapped values.
+// This does not change the originals unless the caller assigns the returned values.
+func SwapValues(a, b int) (int, int) {
+	return b, a
+}
+
+// SwapPointers swaps the values that two pointers point to.
+// This modifies the original variables.
+func SwapPointers(a, b *int) {
+	*a, *b = *b, *a
+}
+
+// AnalyzeEscape calls both CreateOnStack and CreateOnHeap.
+// Run escape analysis with:
+//
+//	go build -gcflags '-m' main.go
+//
+// Add your explanation below after you run the command.
+func AnalyzeEscape() {
+	_ = CreateOnStack()
+	_ = CreateOnHeap()
+}
+
+/*
+Escape analysis explanation (update after running `go build -gcflags '-m' main.go`):
+
+- CreateOnHeap(): the local variable escapes to the heap because we return its address (&n).
+  That value must stay valid after the function returns, so the compiler allocates it on the heap.
+
+- CreateOnStack(): returns a value, so it typically does not escape; it can stay on the stack.
+
+"Escapes to heap" means the compiler decided the variable must be heap-allocated because it
+outlives the function scope or its address is used somewhere that requires it to remain valid.
+*/

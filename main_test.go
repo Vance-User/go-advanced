@@ -281,3 +281,55 @@ func TestCompose(t *testing.T) {
 		})
 	}
 }
+
+func TestSwapValues(t *testing.T) {
+	tests := []struct {
+		name  string
+		a     int
+		b     int
+		wantA int
+		wantB int
+	}{
+		{"swap positives", 5, 10, 10, 5},
+		{"swap with zero", 0, 7, 7, 0},
+		{"swap negatives", -1, -9, -9, -1},
+		{"swap same", 3, 3, 3, 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotA, gotB := SwapValues(tt.a, tt.b)
+			if gotA != tt.wantA || gotB != tt.wantB {
+				t.Fatalf("SwapValues(%d,%d)=(%d,%d) want (%d,%d)",
+					tt.a, tt.b, gotA, gotB, tt.wantA, tt.wantB)
+			}
+		})
+	}
+}
+
+func TestSwapPointers(t *testing.T) {
+	tests := []struct {
+		name  string
+		a     int
+		b     int
+		wantA int
+		wantB int
+	}{
+		{"swap positives", 5, 10, 10, 5},
+		{"swap with zero", 0, 7, 7, 0},
+		{"swap negatives", -1, -9, -9, -1},
+		{"swap same", 3, 3, 3, 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := tt.a
+			b := tt.b
+			SwapPointers(&a, &b)
+			if a != tt.wantA || b != tt.wantB {
+				t.Fatalf("after SwapPointers a=%d b=%d want a=%d b=%d",
+					a, b, tt.wantA, tt.wantB)
+			}
+		})
+	}
+}
