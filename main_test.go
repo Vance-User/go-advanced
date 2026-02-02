@@ -159,3 +159,125 @@ func TestMakeAccumulator(t *testing.T) {
 		t.Fatalf("expected 120, got %d", got)
 	}
 }
+
+func TestApply(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []int
+		op   func(int) int
+		want []int
+	}{
+		{"square", []int{1, 2, 3, 4}, func(x int) int { return x * x }, []int{1, 4, 9, 16}},
+		{"double", []int{-1, 0, 2}, func(x int) int { return x * 2 }, []int{-2, 0, 4}},
+		{"negate", []int{5, -3}, func(x int) int { return -x }, []int{-5, 3}},
+		{"empty", []int{}, func(x int) int { return x + 1 }, []int{}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			original := append([]int(nil), tt.in...) // copy to ensure original isn't modified
+
+			got := Apply(tt.in, tt.op)
+
+			if len(got) != len(tt.want) {
+				t.Fatalf("got %v want %v", got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Fatalf("got %v want %v", got, tt.want)
+				}
+			}
+
+			// Ensure input slice not modified
+			for i := range tt.in {
+				if tt.in[i] != original[i] {
+					t.Fatalf("input slice modified: got %v want %v", tt.in, original)
+				}
+			}
+		})
+	}
+}
+
+func TestFilter(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []int
+		pred func(int) bool
+		want []int
+	}{
+		{"evens", []int{1, 2, 3, 4, 5, 6}, func(x int) bool { return x%2 == 0 }, []int{2, 4, 6}},
+		{"positives", []int{-3, -1, 0, 2, 5}, func(x int) bool { return x > 0 }, []int{2, 5}},
+		{"gt10", []int{9, 10, 11, 20}, func(x int) bool { return x > 10 }, []int{11, 20}},
+		{"none", []int{1, 3, 5}, func(x int) bool { return x%2 == 0 }, []int{}},
+		{"empty", []int{}, func(x int) bool { return x > 0 }, []int{}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Filter(tt.in, tt.pred)
+
+			if len(got) != len(tt.want) {
+				t.Fatalf("got %v want %v", got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Fatalf("got %v want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestReduce(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []int
+		init int
+		op   func(int, int) int
+		want int
+	}{
+		{"sum", []int{1, 2, 3, 4}, 0, func(a, c int) int { return a + c }, 10},
+		{"product", []int{1, 2, 3, 4}, 1, func(a, c int) int { return a * c }, 24},
+		{"max", []int{5, 1, 9, 2}, -999, func(a, c int) int {
+			if c > a {
+				return c
+			}
+			return a
+		}, 9},
+		{"empty sum", []int{}, 0, func(a, c int) int { return a + c }, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Reduce(tt.in, tt.init, tt.op)
+			if got != tt.want {
+				t.Fatalf("got %d want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCompose(t *testing.T) {
+	addTwo := func(x int) int { return x + 2 }
+	double := func(x int) int { return x * 2 }
+
+	tests := []struct {
+		name string
+		f    func(int) int
+		g    func(int) int
+		in   int
+		want int
+	}{
+		{"addTwo(double(x))", addTwo, double, 5, 12},
+		{"double(addTwo(x))", double, addTwo, 5, 14},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := Compose(tt.f, tt.g)
+			if got := h(tt.in); got != tt.want {
+				t.Fatalf("got %d want %d", got, tt.want)
+			}
+		})
+	}
+}

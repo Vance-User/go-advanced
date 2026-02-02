@@ -84,3 +84,42 @@ func MakeAccumulator(initial int) (add func(int), subtract func(int), get func()
 
 	return
 }
+
+// Part 3: Higher-Order Functions
+
+// Apply returns a new slice with operation applied to each element.
+// It does not modify the original slice.
+func Apply(nums []int, operation func(int) int) []int {
+	out := make([]int, len(nums))
+	for i, n := range nums {
+		out[i] = operation(n)
+	}
+	return out
+}
+
+// Filter returns a new slice containing only elements where predicate returns true.
+func Filter(nums []int, predicate func(int) bool) []int {
+	out := make([]int, 0)
+	for _, n := range nums {
+		if predicate(n) {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// Reduce reduces a slice to a single value using the operation function.
+func Reduce(nums []int, initial int, operation func(accumulator, current int) int) int {
+	acc := initial
+	for _, n := range nums {
+		acc = operation(acc, n)
+	}
+	return acc
+}
+
+// Compose returns a new function h(x) = f(g(x)).
+func Compose(f func(int) int, g func(int) int) func(int) int {
+	return func(x int) int {
+		return f(g(x))
+	}
+}
